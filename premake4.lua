@@ -8,7 +8,7 @@ solution "nanovg"
 	
    	project "nanovg"
 		language "C"
-		kind "StaticLib"
+		kind "SharedLib"
 		includedirs { "src" }
 		files { "src/*.c" }
 		targetdir("build")
@@ -224,3 +224,37 @@ solution "nanovg"
 		configuration "Release"
 			defines { "NDEBUG" }
 			flags { "Optimize", "ExtraWarnings"}
+
+newoption {
+    trigger = "prefix",
+    description = "Install prefix",
+    value = "PREFIX"
+}
+
+newaction {
+    trigger = "install",
+    description = "Install libnanovg",
+    execute = function ()
+        prefix = _OPTIONS["prefix"]
+
+        libdir = prefix .. "/lib"
+        includedir = prefix .. "/include"
+
+        file = io.open("/usr/share/pkgconfig/libnanovg.pc", "w")
+        io.output(file)
+        io.write([[libdir=]] .. libdir .. [[ 
+includedir=]] .. includedir .. [[ 
+
+Name: libnanovg
+Description: Libnanovg - vector drawing library
+Version: 1.0
+Libs: -L]] .. libdir .. [[ -lnanovg
+Cflags: -I]] .. includedir
+)
+        io.close(file)
+
+        os.copyfile("build/libnanovg.so", libdir .. "/libnanovg.so")
+        os.copyfile("src/nanovg.h", includedir .. "/nanovg.h")
+        os.copyfile("src/nanovg_gl.h", includedir .. "/nanovg_gl.h")
+    end
+}
